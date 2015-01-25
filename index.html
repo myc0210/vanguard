@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="/lib/semantic-ui-1.8.0/semantic.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+  </head>
+  <body>
+    <div class="ui modal">
+      <div class="header">
+        Enter your nickname
+      </div>
+      <div class="content">
+        <form id="form-nickname" class="ui form">
+          <div class="required field">
+            <label>Nickname</label>
+            <div class="ui icon input">
+              <input id="nickname" type="text" placeholder="Nickname">
+              <i class="user icon"></i>
+            </div>
+          </div>  
+        </form>
+      </div>
+      <div class="actions">
+        <div class="ui positive right labeled icon button">
+          Enter the room.
+          <i class="checkmark icon"></i>
+        </div>
+      </div>
+    </div>
+    <ul id="messages"></ul>
+    <form id="form-messages" action="">
+      <input id="form-messages-input" autocomplete="off" />
+      <div id="form-massages-submit" class="ui positive button">
+        Send
+      </div>
+    </form>
+    <script src="/js/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="/lib/semantic-ui-1.8.0/semantic.min.js"></script>
+    <script>
+      (function($){
+        $('#form-nickname')
+          .form({
+            name: {
+              identifier: 'nickname',
+              rules: [
+                {
+                  type: 'empty',
+                  prompt: 'Please enter your nickname.'
+                }
+              ]
+            },
+          },
+          {
+            inline: true,
+            onSuccess: function() {
+              socketIoInit($('#nickname').val());
+              $('.ui.modal')
+                .modal('hide');
+            }
+          });
+
+        $('.ui.modal')
+          .modal({
+            onApprove: function() {
+              $('#form-nickname')
+                .form('validate form');
+              return false;
+            }
+          })
+          .modal('show');
+
+        function socketIoInit(nickname) {
+          var socket = io();
+          socket.emit('assign nickname', nickname);
+
+          $('#form-messages').submit(function(){
+            socket.emit('chat message', $('#form-messages-input').val());
+            $('#form-messages-input').val('');
+            return false;
+          });
+
+          $('#form-massages-submit').on('click', function(){
+            $('#form-messages').submit();
+          });
+
+          socket.on('chat message', function(msg){
+            $('#messages').append($('<li>').text(msg));
+          });
+        }
+      })(jQuery);
+    </script>
+  </body>
+</html>
